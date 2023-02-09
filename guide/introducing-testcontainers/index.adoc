@@ -160,7 +160,7 @@ Before writing Testcontainers based tests let’s add Testcontainers dependencie
 As we are using Postgres database for our application, we added Testcontainers postgresql module as a test dependency.
 
 === 4. Write test using Testcontainers
-Create CustomerServiceTest.java under src/main/test with following code:
+Create CustomerServiceTest.java under *src/test/java* with following code:
 
 [source,java]
 ----
@@ -196,4 +196,4 @@ Also, any of your teammates can clone the project and run tests without installi
 In addition to Postgres, Testcontainers provides dedicated modules to many commonly used SQL databases, NoSQL databases, messaging queues, etc.
 You can use Testcontainers to run any containerized service for your tests.
 
-You can explore more about Testcontainers at https://www.testcontainers.org/.
+You can explore more about Testcontainers at https://www.testcontainers.com/.
