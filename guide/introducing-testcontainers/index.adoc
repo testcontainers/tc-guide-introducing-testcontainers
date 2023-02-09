@@ -23,18 +23,29 @@ Historically Integration testing is considered difficult because of the challeng
 Integration testing with pre-provisioned infrastructure is challenging because of the following reasons:
 
 * Before running tests, you must ensure that the infrastructure is up and running and data is pre-configured in a specific desired state.
-* If multiple build pipelines run parallelly, then one test execution might interfere with other test data resulting in flaky tests.
+* If multiple build pipelines run in parallel, then one test execution might interfere with other test data resulting in flaky tests.
 
-Due to the challenges mentioned above, some people lean towards using services with in-memory or embedded variations of the required services for integration testing. For example, if an application uses the Postgres database, then H2 in-memory database is used for testing. While this is an improvement over not writing integration tests at all, using mock or in-memory versions of those services brings its own problems:
+Due to the challenges mentioned above, some people lean towards using services with in-memory
+or embedded variations of the required services for integration testing.
+For example, if an application uses the Postgres database, then H2 in-memory database is used for testing.
+While this is an improvement over not writing integration tests at all,
+using mock or in-memory versions of those services brings its own problems:
 
-* In-memory services may not have all the features of your production service. For example, you might be using advanced features of Postgres/Oracle databases in your application. But H2 might not support all those features in order to use it for integration testing.
-* In-memory services delay the feedback cycle. For example, you might have written an SQL query and tested it with an H2 in-memory database which is working fine. But after deploying the application, you may realize the query syntax works fine for H2 but not with your production database Postgres/Oracle. This kind of testing effectively defeats the purpose of testing, which is to get faster feedback cycles.
+* In-memory services may not have all the features of your production service.
+  For example, you might be using advanced features of Postgres/Oracle databases in your application.
+  But H2 might not support all those features in order to use it for integration testing.
+* In-memory services delay the feedback cycle. For example, you might have written an SQL query and tested it with an H2 in-memory database
+  which is working fine. But after deploying the application, you may realize the query syntax works fine for H2
+  but not with your production database Postgres/Oracle. This kind of testing effectively defeats the purpose of testing,
+  which is to get faster feedback cycles.
 
 Now, welcome to the wonderful world of Testcontainers, where integration testing with real services is not only possible but also as easy as writing unit tests 🙂
 
 == What is Testcontainers?
 
-Testcontainers is a testing library that provides easy and lightweight APIs for bootstrapping integration tests with real services wrapped in docker containers. Using Testcontainers, you can write tests talking to the same type of services you use in production without mocks or in-memory services.
+Testcontainers is a testing library that provides easy and lightweight APIs for bootstrapping integration tests
+with real services wrapped in docker containers. Using Testcontainers, you can write tests talking to the same type of services
+you use in production without mocks or in-memory services.
 
 A typical Testcontainers-based integration test works as follows:
 
@@ -46,10 +57,13 @@ A typical Testcontainers-based integration test works as follows:
 * After Test:
     ** Testcontainers will take care of destroying those containers irrespective of whether tests executed successfully or there are any test failures.
 
-The only requirement to run Testcontainers-based tests is to have a Docker-API compatible container runtime. If you have Docker Desktop installed and running, you are good to go. For more information on Testcontainers supporting Docker environments refer https://www.testcontainers.org/supported_docker_environment/ .
+The only requirement to run Testcontainers-based tests is to have a Docker-API compatible container runtime.
+If you have Docker Desktop installed and running, you are good to go.
+For more information on Testcontainers supporting Docker environments refer https://www.testcontainers.org/supported_docker_environment/ .
 
 == What problems do Testcontainers solve?
-Testcontainers solve the integration testing problems mentioned above  by enabling us to test our application using real services and thereby increasing the confidence level on our code changes.
+Testcontainers solve the integration testing problems mentioned above  by enabling us to test our application using real services and
+thereby increasing the confidence level on our code changes.
 
 By using Testcontainers:
 
@@ -101,104 +115,34 @@ Once the project is created, add the following dependencies to pom.xml.
 </build>
 ----
 
-We have added Postgres JDBC driver for talking to Postgresql database, logback-classic for logging and junit-jupiter for testing with JUnit 5. Also, we have used the latest version of maven-surefire-plugin to support JUnit 5 tests.
+We have added Postgres JDBC driver for talking to Postgresql database, logback-classic for logging and junit-jupiter for testing with JUnit 5.
+Also, we have used the latest version of maven-surefire-plugin to support JUnit 5 tests.
 
 === 2. Implement business logic
-We are going to create a simple CustomerService class to manage customer details. First let us create a Customer class as follows:
+
+We are going to create a simple `CustomerService` class to manage customer details.
+First let us create a `Customer` class as follows:
 
 [source,java]
 ----
-class Customer {
-   private Long id;
-   private String name;
-
-   public Customer(Long id, String name) {
-       this.id = id;
-       this.name = name;
-   }
-
-   public Long getId() {
-       return id;
-   }
-
-   public String getName() {
-       return name;
-   }
-}
+include::{codebase}/src/main/java/com/testcontainers/demo/Customer.java[]
 ----
 
-Create CustomerService.java class and add the following code:
+Create `CustomerService.java` class and add the following code:
 
 [source,java]
 ----
-import java.sql.*;
-import java.util.*;
-
-public class CustomerService {
-
-   public CustomerService() {
-       createCustomersTableIfNotExists();
-   }
-
-   public void createCustomer(Customer customer) {
-       try (Connection conn = getConnection()) {
-           PreparedStatement pstmt = conn.prepareStatement("insert into customers(id,name) values(?,?)");
-           pstmt.setLong(1, customer.getId());
-           pstmt.setString(2, customer.getName());
-           pstmt.execute();
-       } catch (SQLException e) {
-           throw new RuntimeException(e);
-       }
-   }
-
-   public List<Customer> getAllCustomers() {
-       List<Customer> customers = new ArrayList<>();
-
-       try (Connection conn = getConnection()) {
-           PreparedStatement pstmt = conn.prepareStatement("select id,name from customers");
-           ResultSet rs = pstmt.executeQuery();
-           while(rs.next()) {
-               long id = rs.getLong("id");
-               String name = rs.getString("name");
-               customers.add(new Customer(id,name));
-           }
-       } catch (SQLException e) {
-           throw new RuntimeException(e);
-       }
-       return customers;
-   }
-
-   private void createCustomersTableIfNotExists() {
-       try (Connection conn = getConnection()) {
-           PreparedStatement pstmt = conn.prepareStatement(
-               "create table if not exists customers (id bigint not null,name varchar not null, primary key (id))");
-           pstmt.execute();
-       } catch (SQLException e) {
-           throw new RuntimeException(e);
-       }
-   }
-
-   private Connection getConnection() {
-       try {
-           String jdbcUrl = System.getProperty("JDBC_URL");
-           String jdbcUsername = System.getProperty("JDBC_USERNAME");
-           String jdbcPassword = System.getProperty("JDBC_PASSWORD");
-           return DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword);
-       } catch (Exception e) {
-           throw new RuntimeException(e);
-       }
-   }
-}
+include::{codebase}/src/main/java/com/testcontainers/demo/CustomerService.java[]
 ----
 
 In CustomerService class we have:
 
-* getConnection() method which gets database connection properties from System Properties and creates a Database Connection using JDBC API
-* createCustomersTableIfNotExists() method creates customers table.
-* createCustomer() method inserts a new customer record into the database.
-* getAllCustomers() method fetches all rows from customers table, populates data into Customer objects and returns a list of Customer objects.
+* The `getConnection()` method which gets database connection properties from System Properties and creates a Database Connection using JDBC API
+* The `createCustomersTableIfNotExists()` method creates customers table.
+* The `createCustomer()` method inserts a new customer record into the database.
+* The `getAllCustomers()` method fetches all rows from customers table, populates data into `Customer` objects and returns a list of `Customer` objects.
 
-Now let us see how we can test CustomerService logic using Testcontainers.
+Now let us see how we can test `CustomerService` logic using Testcontainers.
 
 === 3. Add Testcontainers dependencies
 Before writing Testcontainers based tests let’s add Testcontainers dependencies in pom.xml as follows:
@@ -220,65 +164,36 @@ Create CustomerServiceTest.java under src/main/test with following code:
 
 [source,java]
 ----
-import org.junit.jupiter.api.*;
-import org.testcontainers.containers.PostgreSQLContainer;
-
-import java.util.List;
-
-class CustomerServiceTest {
-   static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
-
-   CustomerService customerService;
-
-   @BeforeAll
-   static void beforeAll() {
-       postgres.start();
-
-       System.setProperty("JDBC_URL", postgres.getJdbcUrl());
-       System.setProperty("JDBC_USERNAME", postgres.getUsername());
-       System.setProperty("JDBC_PASSWORD", postgres.getPassword());
-   }
-
-   @AfterAll
-   static void afterAll() {
-       postgres.stop();
-   }
-
-   @BeforeEach
-   void setUp() {
-       customerService = new CustomerService();
-   }
-
-   @Test
-   void shouldGetCustomers() {
-       customerService.createCustomer(new Customer(1L, "George"));
-       customerService.createCustomer(new Customer(2L, "John"));
-
-       List<Customer> customers = customerService.getAllCustomers();
-       Assertions.assertEquals(2, customers.size());
-   }
-}
+include::{codebase}/src/test/java/com/testcontainers/demo/CustomerServiceTest.java[]
 ----
 
 Let us understand the code in our CustomerServiceTest.
 
-* We declared PostgreSQLContainer by passing the docker image name postgres:15-alpine.
-* The postgres container is started using JUnit 5 @BeforeAll callback, which gets executed before running any test methods.
-* In the same callback method, we have retrieved database connection properties from the container instance and configured them as System Properties. CustomerService will use these System Properties to establish a database connection.
-* We have created a CustomerService instance in @BeforeEach callback method, which gets executed before running every test method. In the CustomerService constructor, we are creating the customers table if it does not already exist.
-* We have a shouldGetCustomers() test where we are inserting 2 customer records into the database, fetching all the existing customers and asserting the number of customers.
-* Finally, we are stopping the postgres container in @AfterAll callback method, which gets executed after all the test methods in that class are executed.
+* We declared *PostgreSQLContainer* by passing the docker image name `postgres:15-alpine`.
+* The postgres container is started using JUnit 5 *@BeforeAll* callback, which gets executed before running any test methods.
+* In the same callback method, we have retrieved database connection properties from the container instance and configured them as System Properties.
+  *CustomerService* will use these System Properties to establish a database connection.
+* We have created a *CustomerService* instance in *@BeforeEach* callback method, which gets executed before running every test method.
+  In the *CustomerService* constructor, we are creating the customers table if it does not already exist.
+* We have *shouldGetCustomers()* test where we are inserting 2 customer records into the database, fetching all the existing customers
+  and asserting the number of customers.
+* Finally, we are stopping the postgres container in *@AfterAll* callback method, which gets executed after all the test methods in that class are executed.
 
-If you run the CustomerServiceTest you can see in the logs that Postgres docker image is pulled from DockerHub if not already available locally, started the container and executed the test.
+If you run the CustomerServiceTest you can see in the logs that Postgres docker image is pulled from DockerHub if not already available locally,
+started the container and executed the test.
 
 Voila!!! You have your first Testcontainers-based test running.
 
 == Conclusion
 
-We have explored the challenges with integration testing and understood why testing with mocks or in-memory services is not a good idea. Then we talked about how Testcontainers solves the integration testing problem and enables us to test with real services. Finally, we get hands-on experience using the Java Testcontainers library for testing a Java application using the Postgres database.
+We have explored the challenges with integration testing and understood why testing with mocks or in-memory services is not a good idea.
+Then we talked about how Testcontainers solves the integration testing problem and enables us to test with real services.
+Finally, we get hands-on experience using the Java Testcontainers library for testing a Java application using the Postgres database.
 
-We have seen how writing an integration test using Testcontainers is very similar to writing a unit test which you can test right from your IDE. Also, any of your teammates can clone the project and run tests without installing Postgres on their computers.
+We have seen how writing an integration test using Testcontainers is very similar to writing a unit test which you can test right from your IDE.
+Also, any of your teammates can clone the project and run tests without installing Postgres on their computers.
 
-In addition to Postgres, Testcontainers provides dedicated modules to many commonly used SQL databases, NoSQL databases, messaging queues, etc. You can use Testcontainers to run any containerized service for your tests.
+In addition to Postgres, Testcontainers provides dedicated modules to many commonly used SQL databases, NoSQL databases, messaging queues, etc.
+You can use Testcontainers to run any containerized service for your tests.
 
 You can explore more about Testcontainers at https://www.testcontainers.org/.
