@@ -5,6 +5,8 @@ draft: false
 description: This guide will introduce you to Testcontainers, what kind of problems Testcontainers solves and how to get started with it.
 repo: https://github.com/testcontainers/tc-guide-introducing-testcontainers
 ---
+:toc:
+:toclevels: 4
 :codebase: https://raw.githubusercontent.com/testcontainers/tc-guide-introducing-testcontainers/main
 
 Modern software systems tackle complex business problems by leveraging various technologies and tools.
