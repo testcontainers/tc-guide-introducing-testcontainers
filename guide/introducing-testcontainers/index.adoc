@@ -69,7 +69,7 @@ The only requirement to run Testcontainers-based tests is to have a Docker-API c
 If you have Docker Desktop installed and running, you are good to go.
 For more information on Docker environments supported by Testcontainers refer to https://www.testcontainers.org/supported_docker_environment/.
 
-== What problems do Testcontainers solve?
+== What problems does Testcontainers solve?
 Testcontainers solves the integration testing problems mentioned above by enabling us to test our application using real services and
 thereby increasing the confidence level on our code changes.
 
@@ -189,6 +189,6 @@ We have seen how writing an integration test using Testcontainers is very simila
 Also, any of your teammates can clone the project and run tests without installing Postgres on their computers.
 
 In addition to Postgres, Testcontainers provides dedicated modules to many commonly used SQL databases, NoSQL databases, messaging queues, etc.
-You can use Testcontainers to run any containerized service for your tests!
+You can use Testcontainers to run any containerized dependency for your tests!
 
 You can explore more about Testcontainers at https://www.testcontainers.com/.

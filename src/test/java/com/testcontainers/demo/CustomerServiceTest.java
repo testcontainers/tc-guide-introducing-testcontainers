@@ -14,7 +14,6 @@ class CustomerServiceTest {
     static PostgreSQLContainer<?> postgres =
             new PostgreSQLContainer<>("postgres:15-alpine");
 
-    DBConnectionProvider connectionProvider;
     CustomerService customerService;
 
     @BeforeAll
@@ -29,7 +28,7 @@ class CustomerServiceTest {
 
     @BeforeEach
     void setUp() {
-        connectionProvider = new DBConnectionProvider(
+        DBConnectionProvider connectionProvider = new DBConnectionProvider(
                 postgres.getJdbcUrl(),
                 postgres.getUsername(),
                 postgres.getPassword()
