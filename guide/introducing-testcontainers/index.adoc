@@ -4,6 +4,11 @@ date: 2023-02-08T09:39:58+05:30
 draft: false
 description: This guide will introduce you to Testcontainers, what kind of problems Testcontainers solves and how to get started with it.
 repo: https://github.com/testcontainers/tc-guide-introducing-testcontainers
+languages:
+  - Java
+tags:
+  - postgresql
+  - mocking
 ---
 :toc:
 :toclevels: 2
