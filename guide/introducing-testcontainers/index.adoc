@@ -4,6 +4,8 @@ date: 2023-02-08T09:39:58+05:30
 draft: false
 description: This guide will introduce you to Testcontainers and explains what kind of problems Testcontainers solves.
 repo: https://github.com/testcontainers/tc-guide-introducing-testcontainers
+tags:
+  - getting-started
 ---
 :toc:
 :toclevels: 2
