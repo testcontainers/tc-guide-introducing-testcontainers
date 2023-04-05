@@ -67,6 +67,8 @@ A typical Testcontainers-based integration test works as follows:
     ** Testcontainers will take care of destroying those containers irrespective of whether tests executed successfully or
     there are any test failures.
 
+image::images/testcontainers-lifecycle-simple-2.png[]
+
 The only requirement to run Testcontainers-based tests is to have a Docker-API compatible container runtime.
 If you have Docker Desktop installed and running, you are good to go.
 For more information on Docker environments supported by Testcontainers refer to https://www.testcontainers.org/supported_docker_environment/.
@@ -74,6 +76,8 @@ For more information on Docker environments supported by Testcontainers refer to
 == What problems does Testcontainers solve?
 Testcontainers solves the integration testing problems mentioned above by enabling us to test our application using real services and
 thereby increasing the confidence level on our code changes.
+
+image::images/testcontainers-dev-ci.png[]
 
 By using Testcontainers:
 
