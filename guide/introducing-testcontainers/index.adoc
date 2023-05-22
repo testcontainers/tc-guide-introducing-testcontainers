@@ -101,5 +101,6 @@ You can explore more about Testcontainers at https://www.testcontainers.com/.
 
 == Further Reading
 * https://testcontainers.com/guides/getting-started-with-testcontainers-for-java/[Getting started with Testcontainers for Java]
+* https://testcontainers.com/guides/getting-started-with-testcontainers-for-dotnet/[Getting started with Testcontainers for .NET]
 * https://testcontainers.com/guides/testcontainers-container-lifecycle/[Testcontainers container lifecycle management using JUnit 5]
 * https://testcontainers.com/guides/replace-h2-with-real-database-for-testing/[The simplest way to replace H2 with a real database for testing]
